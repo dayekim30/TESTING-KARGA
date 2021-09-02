@@ -206,8 +206,8 @@ string Parsing::Frames(const string& input)
 
 }
 
-bool sortByVal(const pair<string, int>& a,
-	const pair<string, int>& b)
+bool sortByVal(const pair<string, float>& a,
+	const pair<string, float>& b)
 {
 	return (a.second < b.second);
 }
@@ -314,12 +314,18 @@ void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
 				string frames[6] = { Frames(fk), Frames(fk.substr(1)),Frames(fk.substr(2)),Frames(rk), Frames(rk.substr(1)),Frames(rk.substr(2)) };
 				/*cout << "id: " << id << endl;
 				cout << "seq: " << frames[0] << endl;*/
-				vector<string>* kmerHitsMandatoryBest = new vector<string>();
+				/*vector<string>* kmerHitsMandatoryBest = new vector<string>();
 				vector<string>* kmerHitsBest = new vector<string>();
 				unordered_map<string, float>* geneHitsMandatoryWeightedBest = new unordered_map<string, float>();
 				unordered_map<string, float>* geneHitsWeightedBest = new unordered_map<string, float>();
 				unordered_map<string, int>* geneHitsMandatoryUnweightedBest = new unordered_map<string, int>();
-				unordered_map<string, int>* geneHitsUnweightedBest = new unordered_map<string, int>();
+				unordered_map<string, int>* geneHitsUnweightedBest = new unordered_map<string, int>();*/
+				std::unique_ptr<vector<string>> kmerHitsMandatoryBest(new vector<string>);
+				std::unique_ptr<vector<string>> kmerHitsBest(new vector<string>);// = nullptr;
+				std::unique_ptr<unordered_map<string, float>> geneHitsMandatoryWeightedBest(new unordered_map<string, float>());// = nullptr;
+				std::unique_ptr<unordered_map<string, float>> geneHitsWeightedBest(new unordered_map<string, float>());// = nullptr;
+				std::unique_ptr<unordered_map<string, int>> geneHitsMandatoryUnweightedBest(new unordered_map<string, int>());// = nullptr;
+				std::unique_ptr<unordered_map<string, int>> geneHitsUnweightedBest(new unordered_map<string, int>());// = nullptr;
 
 				int* bestMandatory = new int(0);
 				int ca = 0;
@@ -330,12 +336,13 @@ void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
 					//unordered_map<string, float>* geneHitsWeighted = new unordered_map<string, float>();
 					//unordered_map<string, int>* geneHitsMandatoryUnweighted = new unordered_map<string, int>();
 					//unordered_map<string, int>* geneHitsUnweighted = new unordered_map<string, int>();
+					
 					vector<string> kmerHitsMandatory;
 					vector<string> kmerHits;
 					unordered_map<string, float> geneHitsMandatoryWeighted;
 					unordered_map<string, float> geneHitsWeighted;
 					unordered_map<string, int> geneHitsMandatoryUnweighted;
-					unordered_map<string, int> geneHitsUnweighted;					
+					unordered_map<string, int> geneHitsUnweighted;			
 					
 					ca++;
 					for (int l = 0; l < frame.length() - k + 1; l++) {
@@ -347,7 +354,7 @@ void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
 							for (string head : mutFromkmer->at(fk)) {
 
 								float frac = 1 / (float)size;
-								/*if (!geneHitsMandatoryWeighted.count(head)) { geneHitsMandatoryWeighted[head]= frac; }
+								/*if (!geneHitsMandatoryWeighted->count(head)) { geneHitsMandatoryWeighted->insert(make_pair(head, frac)); }
 								else { geneHitsMandatoryWeighted->insert_or_assign(head, geneHitsMandatoryWeighted->at(head) + frac); }
 
 								if (!geneHitsMandatoryUnweighted->count(head)) { geneHitsMandatoryUnweighted->insert(make_pair(head, 1)); }
@@ -363,7 +370,7 @@ void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
 						}
 
 						if (kmerFromgene->count(fk)) {
-							/*kmerHits->push_back(fk);
+							/*kmerHits.push_back(fk);
 							int size = kmerFromgene->at(fk).size();
 							for (string head : kmerFromgene->at(fk)) {
 
@@ -389,17 +396,16 @@ void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
 
 						}
 					}
-
 					if (kmerHitsMandatory.size() > kmerHitsMandatoryBest->size()) {
-						*kmerHitsMandatoryBest = kmerHitsMandatory;
-						*geneHitsMandatoryWeightedBest = geneHitsMandatoryWeighted;
-						*geneHitsMandatoryUnweightedBest = geneHitsMandatoryUnweighted;
-						*bestMandatory = ca;
-						*kmerHitsBest = kmerHits;
-						*geneHitsWeightedBest = geneHitsWeighted;
-						*geneHitsUnweightedBest = geneHitsUnweighted;
+							*kmerHitsMandatoryBest = kmerHitsMandatory;
+							*geneHitsMandatoryWeightedBest = geneHitsMandatoryWeighted;
+							*geneHitsMandatoryUnweightedBest = geneHitsMandatoryUnweighted;
+							*bestMandatory = ca;
+							*kmerHitsBest = (kmerHits);
+							*geneHitsWeightedBest = (geneHitsWeighted);
+							*geneHitsUnweightedBest = (geneHitsUnweighted);
 					}
-
+					
 					//delete kmerHitsMandatory, kmerHits, geneHitsMandatoryWeighted, geneHitsWeighted, geneHitsMandatoryUnweighted, geneHitsUnweighted;
 
 				}

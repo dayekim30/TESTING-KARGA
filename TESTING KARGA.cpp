@@ -25,7 +25,7 @@ int main()
     Parsing* parsing = new Parsing(k);
     parsing->Aread("kargva_db_v5.fasta");
     auto start = high_resolution_clock::now();
-    parsing->Qread("testdata_simul.fastq" , false);
+    parsing->Qread("testdata_simul.fastq" , true);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
     cout << "this is the second : " << duration.count() << endl;
