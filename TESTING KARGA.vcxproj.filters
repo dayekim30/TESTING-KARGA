@@ -27,6 +27,9 @@
     <ClCompile Include="Sequence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tester.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Parsing.h">
@@ -38,5 +41,26 @@
     <ClInclude Include="Sequence.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tester.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kseq_cpp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="config.hpp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kseq++.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="seqio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Kseq.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

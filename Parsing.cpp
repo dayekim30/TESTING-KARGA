@@ -4,6 +4,7 @@
 
 #define _CRT_SECURE_NO_DEPRECATE
 #define FIXEDSIZE 3
+
 using namespace std;
 using namespace std::chrono;
 
@@ -214,15 +215,41 @@ bool sortByVal(const pair<string, float>& a,
 
 
 void Parsing::Qread(const string& filename, const bool& reportMultipleHits)
-{
-	//fstream infile;
-	fstream* i_nf = new fstream();
+{   
+	/*unsigned long long _filelength = 0;
+	int _SRlength = 8192;
+
+	size_t bytes_read, bytes_expected;*/
 
 	const int numT = 12500;
 	Nucio();
+	
+	//const char* filenames = filename.c_str();
+	
+	//fstream infile;
 
+	fstream* i_nf = new fstream();
 	i_nf->open(filename, ios::in);
+	
+
 	//cout << "Translation starts (k = " << k << ")" << endl;
+	//FILE* i_nf;
+	//i_nf = fopen(filenames, "r");
+	//fseek(i_nf, 0L, SEEK_END); //go to the end of file
+ //   bytes_expected = ftell(i_nf); //get filesize
+ //   fseek(i_nf, 0L, SEEK_SET); //go to the begining of the file
+	//fclose(i_nf);
+	//if (((char*)malloc(bytes_expected / 2)) == NULL) //allocate space for file
+	////        err(EX_OSERR, "data malloc");
+	//	string name;
+	//    string seqtemp;
+	////    string garbage;
+	////    string phredtemp;
+
+	//boost::iostreams::stream<boost::iostreams::file_source>file(filename);
+
+
+
 	double avg = 0;
 	int t = 0;
 	int& tc = t;

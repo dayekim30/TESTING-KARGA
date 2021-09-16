@@ -19,7 +19,29 @@ typedef vector<string> heads;
 //typedef unordered_set<string> sset;
 typedef vector<vector<string>> mutation;
 
-
+class Hashes {
+	
+	public:
+	    std::size_t operator()(string const& str) const {
+	        int p = 53;
+	        int m = 1e9 + 9;
+	        long long power_of_p = 1;
+	        std::size_t hash_val = 0;
+	
+	        // Loop to calculate the hash value
+	        // by iterating over the elements of string
+	        for (int i = 0; i < str.length(); i++) {
+	            hash_val
+	               = (hash_val
+	                    + (str[i] - 'a' + 1) * power_of_p)
+	                % m;
+	            power_of_p
+	                = (power_of_p * p) % m;
+	        }
+	        return hash_val;
+	    }
+	
+};
 
 
 class Parsing {
@@ -46,9 +68,9 @@ class Parsing {
 	};
 public:
 	Parsing(const int& any) {
-		kmerFromgene = new unordered_map<string, heads>();
+		kmerFromgene = new unordered_map<string, heads,Hashes>();
 		//kmerFromgene = new unordered_map<string, heads>();
-		mutFromkmer = new unordered_map<string, heads>();
+		mutFromkmer = new unordered_map<string, heads, Hashes>();
 		AMRvar = new unordered_map<string, AMRgene>();
 		umap = new unordered_map<std::array<int, FIXEDSIZE>, int, arrayHash<int, FIXEDSIZE>>();
 		k = any;
@@ -62,8 +84,8 @@ public:
 	void Nucio();
 
 public:
-	unordered_map<string, heads>* kmerFromgene;
-	unordered_map<string, heads>* mutFromkmer;
+	unordered_map<string, heads, Hashes>* kmerFromgene;
+	unordered_map<string, heads, Hashes>* mutFromkmer;
 	unordered_map<string, AMRgene>* AMRvar;
 	unordered_map<std::array<int, FIXEDSIZE>, int, arrayHash<int, FIXEDSIZE>> *umap;
 	//unordered_map<string, char>* nuciomap;
