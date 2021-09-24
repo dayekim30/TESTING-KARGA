@@ -157,9 +157,20 @@
     <ClInclude Include="kseq_cpp.h" />
     <ClInclude Include="Parsing.h" />
     <ClInclude Include="RandomGenerator.h" />
+    <ClInclude Include="SafeQueue.h" />
     <ClInclude Include="seqio.h" />
     <ClInclude Include="Sequence.h" />
+    <ClInclude Include="spp.h" />
+    <ClInclude Include="spp_config.h" />
+    <ClInclude Include="spp_dlalloc.h" />
+    <ClInclude Include="spp_memory.h" />
+    <ClInclude Include="spp_smartptr.h" />
+    <ClInclude Include="spp_stdint.h" />
+    <ClInclude Include="spp_timer.h" />
+    <ClInclude Include="spp_traits.h" />
+    <ClInclude Include="spp_utils.h" />
     <ClInclude Include="Tester.h" />
+    <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -9,15 +9,18 @@
 #include <algorithm>
 #include <unordered_set>
 #include <array>
+#include "kseq++.h"
+#include "zlib.h"
+#include "spp.h"
 
 #include "Sequence.h"
-
 #include "RandomGenerator.h"
+using namespace klibpp;
 
 #define _CRT_SECURE_NO_DEPRECATE
 //#define _REMOVE_FPOS_SEEKPOS
 #define _SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING
-
+using spp::sparse_hash_map;
 typedef vector<string> heads;
 //typedef unordered_set<string> sset;
 typedef vector<vector<string>> mutation;
@@ -45,10 +48,21 @@ public:
 	}
 
 };
+struct AMRgene {
+	unordered_map<string, int,Hashes>* kmerFreq;
+	unordered_map<string, float, Hashes>* kmerMapped;
+	AMRgene() {
+		kmerFreq = new unordered_map<string, int, Hashes>();
+		kmerMapped = new unordered_map<string, float, Hashes>();
+	}
+	~AMRgene() {}
+
+};
 
 
 class Tester {
 #define FIXEDSIZE 3
+	
 
 	template<typename T, std::size_t N>
 	class arrayHash {
@@ -59,24 +73,15 @@ class Tester {
 			return sum;
 		}
 	};
-	struct AMRgene {
-		unordered_map<string, int>* kmerFreq;
-		unordered_map<string, float>* kmerMapped;
-		AMRgene() {
-			kmerFreq = new unordered_map<string, int>();
-			kmerMapped = new unordered_map<string, float>();
-		}
-		~AMRgene() {}
-
-	};
+	
 public:
 	Tester(const int& any) {
+		//kmerFromgene = new unordered_map<string, heads, Hashes>();
 		kmerFromgene = new unordered_map<string, heads, Hashes>();
-		//kmerFromgene = new unordered_map<string, heads>();
 		mutFromkmer = new unordered_map<string, heads, Hashes>();
-		AMRvar = new unordered_map<string, AMRgene>();
+		AMRvar = new unordered_map<string, AMRgene, Hashes>();
 		//umap = new unordered_map<std::array<int, FIXEDSIZE>, int, arrayHash<int, FIXEDSIZE>>();
-		umap = new unordered_map<string, int, Hashes>();
+		umap = new unordered_map<string, char, Hashes>();
 		k = any;
 	}
 	~Tester() {}
@@ -90,9 +95,9 @@ public:
 public:
 	unordered_map<string, heads, Hashes>* kmerFromgene;
 	unordered_map<string, heads, Hashes>* mutFromkmer;
-	unordered_map<string, AMRgene>* AMRvar;
+	unordered_map<string, AMRgene, Hashes>* AMRvar;
 	//unordered_map<std::array<int, FIXEDSIZE>, int, arrayHash<int, FIXEDSIZE>>* umap;
-	unordered_map<string, int, Hashes>* umap;
+	unordered_map<string, char, Hashes>* umap;
 	//unordered_map<string, char>* nuciomap;
 	int k;
 };

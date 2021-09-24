@@ -23,7 +23,9 @@ void Parsing::Aread(const string& filename)
 	//newfile.open(filename, ios::in);
 
 	std::cout << "Reading Gene database, creating k - mer mapping (k = " << k << ")" << endl;
-
+	fstream* fout = new fstream();
+	fout->open("its.csv", ios::out | ios::app);
+	*fout << "id, the index \n";
 	if (f_nf->is_open()) {
 		string tp;
 		int i = 0;
@@ -58,6 +60,7 @@ void Parsing::Aread(const string& filename)
 				if (found != string::npos) {
 					tamp = id.substr(first + 1, found - first - 1);
 				}
+				id = id.substr(0, first + 1);
 			}
 
 			//cout << "tamp: " << tamp << endl;
@@ -109,6 +112,16 @@ void Parsing::Aread(const string& filename)
 				//	mutFromkmer->insert_or_assign(id, *muts);
 				//}
 			}
+
+			//HERE
+			*fout << id;
+			for (int a : *positions) {
+				//HERE
+				*fout << "," << a;
+			}
+			//HERE
+			*fout << "\n";
+			
 			AMRgene* am = new AMRgene();
 
 
@@ -158,10 +171,17 @@ void Parsing::Aread(const string& filename)
 		std::cout << "\nthe number of genes: " << i << "\n";
 		//cout << "the bucket size: " << kmerFromgene->size() << endl;
 		//cout << " the bucket mut size: " << mutFromkmer->size() << endl;
+		fout->close();
 		f_nf->close();
 		f_nf = NULL;
 
 	}
+
+	
+	
+	
+
+
 
 }
 //#define _CRT_SECURE_NO_WARNINGS

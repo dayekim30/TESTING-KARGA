@@ -1,224 +1,145 @@
 #include "Tester.h"
-#include <chrono>
-#include <cstdlib>
-#include <zlib.h>
-//#include "kseq_cpp.h"
-#include "kseq++.h"
-#include "Kseq.h"
-using namespace klibpp;
-#define SMALL_BUF_SIZE 4096
-#define BIG_BUF_SIZE 8192// 65536
+#include <string>
 
 #define _CRT_SECURE_NO_DEPRECATE
-
-
 #define FIXEDSIZE 3
-
-using namespace std;
-using namespace std::chrono;
-//typedef unsigned long long u64;
-//int buffering_size = 8 * 1024; //8k
-
-//int file_size = 10*(1024*1024) ;10MB
-//u64 file_size = 2147483648 //2gi
-//unsigned short max_num_size = 65535; //max possible size of u16
-
-
 
 void Tester::Aread(const string& filename)
 {
-
-	fstream newfile;
-	fstream* f_nf = &newfile;
-	string id;
-	string seq;
-
-	f_nf->open(filename, ios::in);
-	//newfile.open(filename, ios::in);
-
+	
 	std::cout << "Reading Gene database, creating k - mer mapping (k = " << k << ")" << endl;
 
-	if (f_nf->is_open()) {
-		string tp;
-		int i = 0;
-		//int l = 0;
-		getline(*f_nf, tp);
+	KSeq record;
+	const char *fname = filename.c_str();
+	gzFile fp = gzopen(fname, "r");
+	auto ks = make_kstream(fp, gzread, mode::in);
+	string id;
+	string seq;
+	int i{ 0 };
+	//testing
+	
 
-		while (!f_nf->eof()) {
+	while (ks >> record) {
+		id= record.name;		
+		seq =record.seq;
+		if (seq.length() < k)continue;
+		//Find mutation index number
+		size_t found_f = id.find('|');
+		size_t found_s = id.find('|', found_f + 1);
+		string mutwin = id.substr(found_f + 1, found_s - found_f - 1);
+		
+		id = id.substr(0, found_f+1);
+		
 
-			if (tp[0] != '>') { std::cout << "wrong FASTA format" << endl; exit(0); }
-			id = tp;
-			seq = "";
-			do {
+		vector <string> tokens;
+		while (mutwin.find(';') != string::npos) {
+			size_t com = mutwin.find(';');
+			size_t ni = mutwin.find_first_of("0123456789");
+			tokens.push_back(mutwin.substr(ni, com-ni-1));
+			mutwin = (mutwin.substr(com + 1));
+			//cout << "the editted tamp: " << tamp << endl;
+		}
+		if (mutwin.find(';') == string::npos) { 
+			size_t ni = mutwin.find_first_of("0123456789");
+			tokens.push_back(mutwin.substr(ni));
+		}
+		
+		unique_ptr<vector<int>> idx(new vector<int>());
+		for (string a : tokens) {
+			idx->push_back(std::stoi(a)-1);
+		}
+		AMRgene amrgene;
+		for (int j = 0; j < seq.size() - k + 1; j++) {
+			
+			string kmer = seq.substr(j, k);
+			
+			if (!(kmerFromgene->count(kmer))) {
 
-				getline(*f_nf, tp);
-				//l++;
+				vector<string>* ai = new vector<string>();
+				ai->push_back(id);
 
-				if (tp[0] == '>' || f_nf->eof())break;
-				seq = seq + tp;
-
-			} while (tp[0] != '>');
-
-			i++;
-
-			if (seq.size() < k)  continue;
-
-			// triming -> id spliting |,; 
-			size_t found = id.find('|');
-			short first = found;
-			string tamp = "";
-			if (found != string::npos) {
-				found = id.find('|', found + 1);
-				if (found != string::npos) {
-					tamp = id.substr(first + 1, found - first - 1);
-				}
+				kmerFromgene->insert(make_pair(kmer, *ai));
+			}
+			else {
+				vector<string>& ai = kmerFromgene->at(kmer);
+				ai.push_back(id);
+				
+				kmerFromgene->emplace(make_pair(kmer, ai));
 			}
 
-			//cout << "tamp: " << tamp << endl;
-			vector <string> tokens;
+			
+			if (!amrgene.kmerFreq->count(kmer)) { amrgene.kmerFreq->insert(make_pair(kmer, 1)); }
+			else { amrgene.kmerFreq->emplace(make_pair(kmer, amrgene.kmerFreq->at(kmer) + 1)); }
+			
+			//Mutation Collections
+			for (int a : *idx) {
+				
 
-			while (tamp.find(';') != string::npos) {
-				int com = tamp.find(';');
-				tokens.push_back(tamp.substr(0, com));
-				tamp = tamp.substr(com + 1);
-				//cout << "the editted tamp: " << tamp << endl;
-			}
-			if (tamp.find(';') == string::npos) tokens.push_back(tamp);
-
-			//getting mutation hash table from tokens
-
-
-			vector<int>* positions = new vector<int>();
-			for (string a : tokens) {
-				int n;
-				int st;
-				//char c;
-				for (int h = 0; h < a.length(); h++) {
-					if (isdigit(a.at(h))) { st = h; break; }
-				}
-				size_t found = a.find("STOP");
-				if (found != string::npos) {
-					n = stoi(a.substr(st, found - 1));
-					//c = '*';
-				}
-				else {
-					n = stoi(a.substr(st, a.length() - 2));
-					//c = a.at(a.length() - 1);
-				}
-				positions->push_back(n - 1);
-				//cout << "target n:" << n << " tanget c: " << c << endl;
-					// check there is targeted mutation in this sequence
-				//if (seq.at(n - 1) == c) {
-				//	//cout << "yes it is here" << endl;
-
-				//	//make mutaion hashtable --- think about making this as hashset
-				//	vector<string>* mt = new vector<string>();
-				//	for (int x = 1; x < k + 1; x++) {
-				//		int ft = (n - 1) - (k - x);
-				//		if (ft < 0 || n + x - 1>seq.length()) continue;
-				//		mt->push_back(seq.substr(ft, k));
-
-				//	}
-				//	muts->push_back(*mt);
-				//	mutFromkmer->insert_or_assign(id, *muts);
-				//}
-			}
-			AMRgene* am = new AMRgene();
-
-
-			for (int j = 0; j < seq.size() - k + 1; j++) {
-
-				string kmer = seq.substr(j, k);
-
-				if (!(kmerFromgene->count(kmer))) {
-
-					vector<string>* ai = new vector<string>();
-					ai->push_back(id);
-
-					kmerFromgene->insert(make_pair(kmer, *ai));
-				}
-				else {
-					vector<string>& ai = kmerFromgene->at(kmer);
-					ai.push_back(id);
-					//kmerFromgene->insert(make_pair(kmer,ai));
-					kmerFromgene->insert_or_assign(kmer, ai);
-				}
-
-				if (!am->kmerFreq->count(kmer)) { am->kmerFreq->insert(make_pair(kmer, 1)); }
-				else { am->kmerFreq->insert_or_assign(kmer, am->kmerFreq->at(kmer) + 1); }
-
-				//Collect Mutation 
-				for (int a : *positions) {
-					if (j <= a && a - k + 1 <= j) {
-						if (mutFromkmer->count(kmer)) {
-							auto muth = mutFromkmer->at(kmer);
-							muth.push_back(id);
-							mutFromkmer->insert_or_assign(kmer, muth);
-						}
-						else { vector<string> mutHead{ id }; mutFromkmer->insert(make_pair(kmer, mutHead)); }
-
+				if (j <= a && a - k + 1 <= j) {
+					if (mutFromkmer->count(kmer)) {
+						auto muth = mutFromkmer->at(kmer);
+						muth.push_back(id);
+						mutFromkmer->emplace(make_pair(kmer, muth));
 					}
-
+					else { vector<string> mutHead{ id }; mutFromkmer->insert(make_pair(kmer, mutHead)); }
 				}
+			}
+			
 
-			}
-			AMRvar->insert(make_pair(id, *am));
-			delete positions;
-			if (i % 1000 == 0) {
-				std::cout << i << ".. ";
-			}
 
 		}
-		std::cout << "\nthe number of genes: " << i << "\n";
-		//cout << "the bucket size: " << kmerFromgene->size() << endl;
-		//cout << " the bucket mut size: " << mutFromkmer->size() << endl;
-		f_nf->close();
-		f_nf = NULL;
+		AMRvar->insert(make_pair(id, amrgene));
+		i++;
+		if (i % 1000 == 0) {
+			std::cout << i << ".. ";
+		}
 
 	}
+	std::cout << "\nthe number of genes: " << i << "\n";
+	
+	gzclose(fp);
+	
 
+
+	//fstream* fout = new fstream();
+	//fout->open(".csv", ios::out | ios::app);
+	//*fout << "kmer, id \n";
+	//for (auto any = mutFromkmer->begin(); any != mutFromkmer->end(); ++any) {
+	//	*fout << any->first;
+	//	//amrgfreq
+	//	//AMRgene ata = any->second;
+	//	for (auto snd = any->second.begin(); snd != any->second.end(); ++snd) {
+	//		*fout << "," << snd->c_str();
+	//	}
+	//	*fout << "\n";
+	//}
+	//fout->close();
 }
+
+	
 //#define _CRT_SECURE_NO_WARNINGS
 void Tester::Nucio()
 {
-	//unordered_map<std::array<int, FIXEDSIZE>, int, arrayHash<int, FIXEDSIZE>> umap;
-
-	string filename("neclo.txt");
-	FILE* input_file = fopen(filename.c_str(), "r");
-	if (input_file == nullptr) {
-		cout << EXIT_FAILURE;
-	}
-
-	int c;
-	while ((c = fgetc(input_file)) != EOF) {
-		int i = 1;
-		char tm[3];
-		tm[0] = c;
-		//array<int, FIXEDSIZE> tm = { c };
-		while ((c = fgetc(input_file)) != EOF && i < 3) {
-			tm[i] = c;
-			i++;
+	ifstream file("neclo.txt");
+	if (file.is_open()) {
+		string line;
+		while (getline(file, line)) {
+			umap->insert(make_pair(line.substr(0, 3), line[4]));
+			
 		}
-		string nuc(tm);
-		umap->insert(make_pair(nuc, fgetc(input_file)));
-		fgetc(input_file);
+		file.close();
 	}
 
-	fclose(input_file);
 }
+
 #define _CRT_SECURE_NO_DEPRECATE
 string Tester::Frames(const string& input)
 {
 
-	//vector<char> sseq;
-	string sseq = "";
+	vector<char> sseq;
 	for (int a = 0; a < input.length() - 2; a = a + 3) {
-		/*char am[3];
-		am[0] = input[a];
-		am[1] = input[a + 1];
-		am[2] = input[a + 2];*/
-		string nucio = input.substr(a, 3);
-		if (umap->count(nucio)) { sseq.push_back(umap->at(nucio));}
+		char tm[3] = { input[a] ,input[a + 1] ,input[a + 2] };
+		if (umap->count(tm)) { sseq.push_back(umap->at(tm)); }
 		else { sseq.push_back('?'); }
 	}
 	string s(sseq.begin(), sseq.end());
@@ -231,40 +152,29 @@ bool sortByVals(const pair<string, float>& a,
 {
 	return (a.second < b.second);
 }
-typedef std::vector<uint32_t> data_t;
+
 
 void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 {
 	
 	const int numT = 12500;
 	Nucio();
-	cout << "Translation starts (k = " << k << ")" << endl;
-	
-	fstream* i_nf = new fstream();
-	i_nf->open(filename, ios::in);
 
 	double avg = 0;
-	int t = 0;
-	int& tc = t;
-	if (i_nf->is_open()) {
-		string tp;
+	int tc = 0;
 
-		while (getline(*i_nf, tp)) {
-			if (tp[0] != '@') {
-				std::cout << "this is wrong FASTQ file format." << endl;
-				exit(0);
-			}
-			getline(*i_nf, tp);
-			avg = avg + (double)(tp.length());
-			getline(*i_nf, tp);
-			getline(*i_nf, tp);
+	KSeq record;
+	const char* fname = filename.c_str();
+	{
+		gzFile qfp = gzopen(fname, "r");
+		auto ks = make_kstream(qfp, gzread, mode::in);
+		while (ks >> record) {
+			avg = avg + (double)(record.seq.length());
 			tc++;
 		}
-		i_nf->close();
-		delete i_nf;
-		i_nf = NULL;
+		gzclose(qfp); 
 	}
-
+	
 	avg = (avg / (double)tc) + 0.5;
 	std::cout << "average read length is " << (unsigned long int)avg << " bases" << endl;
 
@@ -297,14 +207,10 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 	int pvalue = md[99 * numT / 100];
 	int* pvalthres = &pvalue;
 	std::cout << "99th percentile of random k-mers match distribution is " << *pvalthres << "(max is " << md[numT - 1] << " )" << endl;
-	//delete matchDist;
-	//matchDist = NULL;
+	
+	std::cout << "Reading file and mapping genes" << endl;
 
 	
-	string i;
-	cout << "Reading file and mapping genes" << endl;
-
-	tc = 0;
 
 	fstream* fout = new fstream();
 	fout->open("_KARGVA_mappedReads.csv", ios::out | ios::app);
@@ -312,99 +218,34 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 	if (reportMultipleHits) *fout << ",...";
 	*fout << "\n";
 
-	/*unsigned long long _filelength = 0;
-	
-	size_t bytes_read, bytes_expected;
-	const char* filenames = filename.c_str();*/
-
-	//FILE* inf;
-	//inf = fopen(filenames, "r");
-	//fseek(inf, 0L, SEEK_END); //go to the end of file
-	//bytes_expected = ftell(inf); //get filesize
-	//fseek(inf, 0L, SEEK_SET); //go to the begining of the file
-	//fclose(inf);
-	//if (((char*)malloc(bytes_expected / 2)) == NULL) //allocate space for file
-	//       err(EX_OSERR, "data malloc");
-	/*ifstream infile(filename, std::ios::binary);
-	unsigned char* buffer = new unsigned char[buffering_size];
-	int buffer_index = 0;
-	
-	string id;
-	string seq;
-	string garbage;*/
-	////    string phredtemp;
-	//data_t data;
-	//data.reserve(97612895);
-	/*boost::iostreams::mapped_file mmap(argv[1], boost::iostreams::mapped_file::readonly);
-	auto f = mmap.const_data();
-	auto l = f + mmap.size();*/
-
-
-	//boost::iostreams::stream<boost::iostreams::file_source>file(filenames);
-	//char buff[4096];
-	/*if (f_in->is_open()) {
-		string tp;*/
-	/*constexpr size_t buffersize = 1024 * 1024;
-	
-	unique_ptr<char[]> buffer(new char[buffersize]);
-	while (file) {
-		file.read(buffer.get(), buffersize);
-		
-	
-	}*/
-	const char* filenames = filename.c_str();
-	/*kseq_cpp::kseq_parser kseq(filenames);
-	string id;
-	string seq;
-	while (kseq.read_seq() >= 0)*/
-	KSeq record;
-	gzFile fp = gzopen(filenames, "r");
+	tc = 0;
+	gzFile fp = gzopen(fname, "r");
 	auto ks = make_kstream(fp, gzread, mode::in);
-	/*gzFile fp;
-	char dret;
-	std::string s;
-	auto start = high_resolution_clock::now();
-	fp = gzopen(filenames, "r");
-	auto ks = make_ikstream(fp, gzread, BIG_BUF_SIZE);*/
 	string id;
 	string seq;
-	while (ks >> record)
 
-	{
-		id = record.name; // name, etc. are all std::string
+	while (ks >> record) {
+		id = record.name;
 		seq = record.seq;
 		tc++;
 		if ((seq.length() / 3) > k) {
-
-			Sequence* sq = new Sequence(seq);
+		
+			std::unique_ptr<Sequence> sq(new Sequence(seq));
 			string fk = sq->forwardSeq();
 			string rk = sq->backwardSeq();
 			string frames[6] = { Frames(fk), Frames(fk.substr(1)),Frames(fk.substr(2)),Frames(rk), Frames(rk.substr(1)),Frames(rk.substr(2)) };
-			/*cout << "id: " << id << endl;
-			cout << "seq: " << frames[0] << endl;*/
-			/*vector<string>* kmerHitsMandatoryBest = new vector<string>();
-			vector<string>* kmerHitsBest = new vector<string>();
-			unordered_map<string, float>* geneHitsMandatoryWeightedBest = new unordered_map<string, float>();
-			unordered_map<string, float>* geneHitsWeightedBest = new unordered_map<string, float>();
-			unordered_map<string, int>* geneHitsMandatoryUnweightedBest = new unordered_map<string, int>();
-			unordered_map<string, int>* geneHitsUnweightedBest = new unordered_map<string, int>();*/
+		
 			std::unique_ptr<vector<string>> kmerHitsMandatoryBest(new vector<string>);
-			std::unique_ptr<vector<string>> kmerHitsBest(new vector<string>);// = nullptr;
-			std::unique_ptr<unordered_map<string, float>> geneHitsMandatoryWeightedBest(new unordered_map<string, float>());// = nullptr;
-			std::unique_ptr<unordered_map<string, float>> geneHitsWeightedBest(new unordered_map<string, float>());// = nullptr;
-			std::unique_ptr<unordered_map<string, int>> geneHitsMandatoryUnweightedBest(new unordered_map<string, int>());// = nullptr;
-			std::unique_ptr<unordered_map<string, int>> geneHitsUnweightedBest(new unordered_map<string, int>());// = nullptr;
-
-			int* bestMandatory = new int(0);
+			std::unique_ptr<vector<string>> kmerHitsBest(new vector<string>);
+			std::unique_ptr<unordered_map<string, float>> geneHitsMandatoryWeightedBest(new unordered_map<string, float>());
+			std::unique_ptr<unordered_map<string, float>> geneHitsWeightedBest(new unordered_map<string, float>());
+			std::unique_ptr<unordered_map<string, int>> geneHitsMandatoryUnweightedBest(new unordered_map<string, int>());
+			std::unique_ptr<unordered_map<string, int>> geneHitsUnweightedBest(new unordered_map<string, int>());
+			std::unique_ptr<int> bestMandatory (new int(0));
+			
 			int ca = 0;
 			for (string frame : frames) {
-				//vector<string>* kmerHitsMandatory = new vector<string>();
-				//vector<string>* kmerHits = new vector<string>();
-				//unordered_map<string, float>* geneHitsMandatoryWeighted = new unordered_map<string, float>();
-				//unordered_map<string, float>* geneHitsWeighted = new unordered_map<string, float>();
-				//unordered_map<string, int>* geneHitsMandatoryUnweighted = new unordered_map<string, int>();
-				//unordered_map<string, int>* geneHitsUnweighted = new unordered_map<string, int>();
-
+				
 				vector<string> kmerHitsMandatory;
 				vector<string> kmerHits;
 				unordered_map<string, float> geneHitsMandatoryWeighted;
@@ -412,7 +253,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 				unordered_map<string, int> geneHitsMandatoryUnweighted;
 				unordered_map<string, int> geneHitsUnweighted;
 
-				ca++;
+				
 				for (int l = 0; l < frame.length() - k + 1; l++) {
 					string fk = frame.substr(l, k);
 
@@ -422,12 +263,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 						for (string head : mutFromkmer->at(fk)) {
 
 							float frac = 1 / (float)size;
-							/*if (!geneHitsMandatoryWeighted->count(head)) { geneHitsMandatoryWeighted->insert(make_pair(head, frac)); }
-							else { geneHitsMandatoryWeighted->insert_or_assign(head, geneHitsMandatoryWeighted->at(head) + frac); }
-
-							if (!geneHitsMandatoryUnweighted->count(head)) { geneHitsMandatoryUnweighted->insert(make_pair(head, 1)); }
-							else { geneHitsMandatoryUnweighted->insert_or_assign(head, geneHitsMandatoryUnweighted->at(head) + 1); }*/
-
+							
 							if (!geneHitsMandatoryWeighted.count(head)) { geneHitsMandatoryWeighted[head] = frac; }
 							else { geneHitsMandatoryWeighted[head] = geneHitsMandatoryWeighted[head] + frac; }
 
@@ -438,18 +274,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 					}
 
 					if (kmerFromgene->count(fk)) {
-						/*kmerHits.push_back(fk);
-						int size = kmerFromgene->at(fk).size();
-						for (string head : kmerFromgene->at(fk)) {
-
-							float frac = 1 / (float)size;
-							if (!geneHitsWeighted->count(head)) { geneHitsWeighted->insert(make_pair(head, frac)); }
-							else { geneHitsWeighted->insert_or_assign(head, geneHitsWeighted->at(head) + frac); }
-
-							if (!geneHitsUnweighted->count(head)) { geneHitsUnweighted->insert(make_pair(head, 1)); }
-							else { geneHitsUnweighted->insert_or_assign(head, geneHitsUnweighted->at(head) + 1); }
-						}*/
-
+						
 						kmerHits.push_back(fk);
 						int size = kmerFromgene->at(fk).size();
 						for (string head : kmerFromgene->at(fk)) {
@@ -473,9 +298,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 					*geneHitsWeightedBest = (geneHitsWeighted);
 					*geneHitsUnweightedBest = (geneHitsUnweighted);
 				}
-
-				//delete kmerHitsMandatory, kmerHits, geneHitsMandatoryWeighted, geneHitsWeighted, geneHitsMandatoryUnweighted, geneHitsUnweighted;
-
+				ca++;	
 			}
 			if (kmerHitsMandatoryBest->size() > *pvalthres) {
 				unordered_map<string, float>* scores = new unordered_map<string, float>();
@@ -514,8 +337,8 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 					for (int c = 0; c < kmerHitsBest->size(); c++) {
 						string kh = kmerHitsBest->at(c);
 						if (genehit.kmerFreq->count(kh)) {
-							if (!genehit.kmerMapped->count(kh)) { genehit.kmerMapped->insert(make_pair(kh, 1)); }
-							else { genehit.kmerMapped->insert_or_assign(kh, genehit.kmerMapped->at(kh) + 1); }
+							if (!genehit.kmerMapped->count(kh)) { genehit.kmerMapped->insert(make_pair(kh, (int)1)); }
+							else { genehit.kmerMapped->emplace(make_pair(kh, (genehit.kmerMapped->at(kh)) + 1)); }
 						}
 
 					}
@@ -527,24 +350,15 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 				*fout << id << "," << "?,?/?/?/?/?" << "\n";
 
 			}
-
-			delete sq, kmerHitsMandatoryBest, kmerHitsBest, geneHitsMandatoryWeightedBest, geneHitsWeightedBest, geneHitsMandatoryUnweightedBest, geneHitsUnweightedBest, bestMandatory;
 		}
 		if (tc % 100000 == 0) {
 			std::cout << tc << " reads processed." << endl;
 
 		}
-
-
-
+		
 	}
+	fout->close();
 	gzclose(fp);
-		fout->close();
-	
-	delete fout;
-	fout = NULL;
-	
-
 
 
 	fstream* f_ot = new fstream();

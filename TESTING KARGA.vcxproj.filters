@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="sparsepp">
+      <UniqueIdentifier>{3e81bc97-4e77-4940-acdd-28e643bc967f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TESTING KARGA.cpp">
@@ -57,6 +60,39 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Kseq.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="spp.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_config.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_dlalloc.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_memory.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_smartptr.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_stdint.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_timer.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_traits.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="spp_utils.h">
+      <Filter>sparsepp</Filter>
+    </ClInclude>
+    <ClInclude Include="SafeQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
