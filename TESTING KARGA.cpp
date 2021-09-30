@@ -8,8 +8,8 @@
 #include <chrono>
 #include <unordered_map>
 
-#include "Parsing.h"
-//#include "Tester.h"
+//#include "Parsing.h"
+#include "Tester.h"
 using namespace std;
 using namespace std::chrono;
 
@@ -22,7 +22,7 @@ int main()
     int k;
     cin >> k;
     
-    Parsing* parsing = new Parsing(k);
+    Tester* parsing = new Tester(k);
     parsing->Aread("kargva_db_v5.fasta");
     auto start = high_resolution_clock::now();
     parsing->Qread("testdata_simul.fastq" , true);

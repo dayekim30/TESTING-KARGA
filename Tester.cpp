@@ -48,6 +48,8 @@ void Tester::Aread(const string& filename)
 		for (string a : tokens) {
 			idx->push_back(std::stoi(a)-1);
 		}
+
+		
 		AMRgene amrgene;
 		for (int j = 0; j < seq.size() - k + 1; j++) {
 			
@@ -64,22 +66,21 @@ void Tester::Aread(const string& filename)
 				vector<string>& ai = kmerFromgene->at(kmer);
 				ai.push_back(id);
 				
-				kmerFromgene->emplace(make_pair(kmer, ai));
+				kmerFromgene->insert_or_assign(kmer, ai);
 			}
 
 			
 			if (!amrgene.kmerFreq->count(kmer)) { amrgene.kmerFreq->insert(make_pair(kmer, 1)); }
-			else { amrgene.kmerFreq->emplace(make_pair(kmer, amrgene.kmerFreq->at(kmer) + 1)); }
+			else { amrgene.kmerFreq->insert_or_assign(kmer, amrgene.kmerFreq->at(kmer) + 1); }
 			
 			//Mutation Collections
 			for (int a : *idx) {
-				
 
 				if (j <= a && a - k + 1 <= j) {
 					if (mutFromkmer->count(kmer)) {
 						auto muth = mutFromkmer->at(kmer);
 						muth.push_back(id);
-						mutFromkmer->emplace(make_pair(kmer, muth));
+						mutFromkmer->insert_or_assign(kmer, muth);
 					}
 					else { vector<string> mutHead{ id }; mutFromkmer->insert(make_pair(kmer, mutHead)); }
 				}
@@ -99,21 +100,37 @@ void Tester::Aread(const string& filename)
 	
 	gzclose(fp);
 	
-
+	//HERE
 
 	//fstream* fout = new fstream();
-	//fout->open(".csv", ios::out | ios::app);
-	//*fout << "kmer, id \n";
-	//for (auto any = mutFromkmer->begin(); any != mutFromkmer->end(); ++any) {
+	//fout->open("amrgeneTEST1.csv", ios::out | ios::app);
+	//*fout << "id, kmer/freq \n";
+	//for (auto any = AMRvar->begin(); any != AMRvar->end(); ++any) {
 	//	*fout << any->first;
 	//	//amrgfreq
-	//	//AMRgene ata = any->second;
-	//	for (auto snd = any->second.begin(); snd != any->second.end(); ++snd) {
-	//		*fout << "," << snd->c_str();
+	//	AMRgene ata = any->second;
+	//	for (auto snd = ata.kmerFreq->begin(); snd != ata.kmerFreq->end(); ++snd) {
+	//		*fout << "," << snd->first<<"/"<<snd->second;
 	//	}
 	//	*fout << "\n";
-	//}
+	//}	//HERE
+	//
 	//fout->close();
+
+		//fstream* fout = new fstream();
+		//fout->open("mutFromKmerTEST1.csv", ios::out | ios::app);
+		//*fout << "kmer, id \n";
+		//for (auto any = mutFromkmer->begin(); any != mutFromkmer->end(); ++any) {
+		//	*fout << any->first;
+		//	//	//amrgfreq
+		//	//	//AMRgene ata = any->second;
+		//	for (auto snd = any->second.begin(); snd != any->second.end(); ++snd) {
+		//		*fout << "," << snd->c_str();
+		//	}
+		//	*fout << "\n";
+		//}
+		//fout->close();
+	
 }
 
 	
@@ -213,7 +230,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 	
 
 	fstream* fout = new fstream();
-	fout->open("_KARGVA_mappedReads.csv", ios::out | ios::app);
+	fout->open("_KARGVA_mappedReadsTEST1.csv", ios::out | ios::app);
 	*fout << "Idx, GeneAnnotation, GeneScore/KmerSNPsHits/KmersHitsOnGene/KmersHitsOnAllGenes/KmersTotal";
 	if (reportMultipleHits) *fout << ",...";
 	*fout << "\n";
@@ -338,7 +355,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 						string kh = kmerHitsBest->at(c);
 						if (genehit.kmerFreq->count(kh)) {
 							if (!genehit.kmerMapped->count(kh)) { genehit.kmerMapped->insert(make_pair(kh, (int)1)); }
-							else { genehit.kmerMapped->emplace(make_pair(kh, (genehit.kmerMapped->at(kh)) + 1)); }
+							else { genehit.kmerMapped->insert_or_assign(kh, (genehit.kmerMapped->at(kh)) + 1); }
 						}
 
 					}
@@ -362,7 +379,7 @@ void Tester::Qread(const string& filename, const bool& reportMultipleHits)
 
 
 	fstream* f_ot = new fstream();
-	f_ot->open("_KARGVA_mappedGenes.csv", ios::out | ios::app);
+	f_ot->open("_KARGVA_mappedGenesTEST1.csv", ios::out | ios::app);
 	*f_ot << "GeneIdx, PercentGeneCovered, AberageKMerDepth\n";
 
 	vector<string> keyset;
