@@ -8,8 +8,8 @@
 #include <chrono>
 #include <unordered_map>
 
-//#include "Parsing.h"
-#include "Tester.h"
+#include "Parsing.h"
+//#include "Tester.h"
 using namespace std;
 using namespace std::chrono;
 
@@ -18,69 +18,50 @@ using namespace std::chrono;
 
 int main()
 {
-    cout << "put the number of k" << endl;
-    int k;
-    cin >> k;
+    string input[3];
+    int finput;
+    string fasta = "kargva_db_v5.fasta";
+    string fastq = "testdata_simul.fastq";
+
+    cout << "Please write the input elements: 1) number of K   2)FASTA file   3)FASTQ file." << endl;
     
-    Tester* parsing = new Tester(k);
-    parsing->Aread("kargva_db_v5.fasta");
+    cin >> input[0] >> input[1] >>input[2];
+
+    cout << "Do you need mapped genes informaiton in detail? Yes -> 1, No ->0" << endl;
+    
+    cin >> finput;
+    cout << "the number of K: " << finput << endl;
+    
+    int Knum = stoi(input[0]);
+    
+    fasta = input[1];
+    fastq = input[2];
+    
+   cout << " The number K is " << Knum << ", FASTA file name: " << fasta << ", FASTQ file name: " << fastq;
+
+   // Replacement point 1 :start
+    Parsing* parsing = new Parsing(Knum);
+    parsing->Aread(fasta);
     auto start = high_resolution_clock::now();
-    parsing->Qread("testdata_simul.fastq" , true);
+    parsing->Qread(fastq , finput);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
     cout << "this is the second : " << duration.count() << endl;
+    //Replacement point 1 :end
 }
 
-//void readfastq(char* filename, int SRlength) {
-//    _filelength = 0;
-//    _SRlength = SRlength;
-//
-//    size_t bytes_read, bytes_expected;
-//
-//    FILE* fp;
-//    fp = fopen(filename, "r");
-//
-//    fseek(fp, 0L, SEEK_END); //go to the end of file
-//    bytes_expected = ftell(fp); //get filesize
-//    fseek(fp, 0L, SEEK_SET); //go to the begining of the file
-//
-//    fclose(fp);
-//
-//    if ((_seqarray = (char*)malloc(bytes_expected / 2)) == NULL) //allocate space for file
-//        err(EX_OSERR, "data malloc");
-//
-//
-//    string name;
-//    string seqtemp;
-//    string garbage;
-//    string phredtemp;
-//
-//    boost::iostreams::stream<boost::iostreams::file_source>file(filename);
-//
-//
-//    while (std::getline(file, name)) {
-//        std::getline(file, seqtemp);
-//        std::getline(file, garbage);
-//        std::getline(file, phredtemp);
-//
-//        if (seqtemp.size() != SRlength) {
-//            if (seqtemp.size() != 0)
-//                printf("Error on read in fastq: size is invalid\n");
-//        }
-//        else {
-//            _names.push_back(name);
-//
-//            strncpy(&(_seqarray[SRlength * _filelength]), seqtemp.c_str(), seqtemp.length()); //do not handle special letters here, do on GPU
-//
-//            _filelength++;
-//        }
-//    }
-//}
-    
+// Tester includes zlib which can open/read/write zip file but it still has a few bugs (Details are written in the document.)
+// Tester is expected to run faster than the current one. After fixing the bugs, the below codes can be replacec with block (Replacement point 1 :start - end).
 
+/*Tester* parsing = new Tester(Knum);
+parsing->Aread(fasta);
+auto start = high_resolution_clock::now();
+parsing->Qread(fastq, finput);
+auto stop = high_resolution_clock::now();
+auto duration = duration_cast<microseconds>(stop - start);
+cout << "this is the second : " << duration.count() << endl;
+*/
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
 
 // Tips for Getting Started: 
 //   1. Use the Solution Explorer window to add/manage files
