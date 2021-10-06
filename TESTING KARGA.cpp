@@ -33,9 +33,11 @@ int main()
     cout << "the number of K: " << finput << endl;
     
     int Knum = stoi(input[0]);
-    
-    fasta = input[1];
-    fastq = input[2];
+    if (input[1].find("fasta") != string::npos) { fasta = input[1]; }
+    else { cout << "This file is not FASTA file."; return (0); };
+    if(input[1].find("fastq") != string::npos) fastq = input[2];
+    else { cout << "This file is not FASTQ file."; return (0); };
+
     
    cout << " The number K is " << Knum << ", FASTA file name: " << fasta << ", FASTQ file name: " << fastq;
 
