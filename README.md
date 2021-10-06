@@ -17,5 +17,5 @@ Copy the git-link on Visual Studio or other IDEs and run this program with the r
 4. The result data will be stored in the same directory where this program class files exist.
 
 ### Output
-KARGVA_mappedGenes.csv
+KARGVA_mappedGenes.csv \n
 KARGVA_mappedReads.csv
